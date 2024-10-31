@@ -1,28 +1,84 @@
 package com.example.gmail
-import android.graphics.Color
+
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ListView
+import android.widget.RadioButton
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var inputNumber: EditText
+    private lateinit var evenButton: RadioButton
+    private lateinit var oddButton: RadioButton
+    private lateinit var squareButton: RadioButton
+    private lateinit var showButton: Button
+    private lateinit var errorText: TextView
+    private lateinit var listView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        inputNumber = findViewById(R.id.InputNumber)
+        evenButton = findViewById(R.id.EvenButton)
+        oddButton = findViewById(R.id.OddButton)
+        squareButton = findViewById(R.id.SquareButton)
+        showButton = findViewById(R.id.ShowButton)
+        errorText = findViewById(R.id.ErrorText)
+        listView = findViewById(R.id.ListView)
 
-        val emails = listOf(
-            Email("Edurila.com", "Learn Web Design with our best-selling course...", "12:34 PM", false, Color.BLUE),
-            Email("Chris Abad", "Help make Campaign Monitor better...", "11:22 AM", true, Color.RED),
-            Email("Tuto.com", "Photoshop, SEO, Blender, CSS, WordPress...", "11:04 AM", false, Color.GREEN),
-            Email("Support", "OVH services - http://www.ovh.com", "10:26 AM", false, Color.GRAY),
-            Email("Matt from Ionic", "The new Ionic Creator is here!", "9:58 AM", true, Color.MAGENTA)
-        )
+        showButton.setOnClickListener {
+            val input = inputNumber.text.toString()
+            if (input.isEmpty()) {
+                errorText.text = "Please enter a positive number."
+                return@setOnClickListener
+            }
 
-        val adapter = EmailAdapter(emails)
-        recyclerView.adapter = adapter
+            val n: Int = try {
+                input.toInt().also {
+                    if (it < 0) {
+                        errorText.text = "Please enter a positive number."
+                        return@setOnClickListener
+                    }
+                }
+            } catch (e: NumberFormatException) {
+                errorText.text = "Invalid input. Please enter a valid number."
+                return@setOnClickListener
+            }
+
+            errorText.text = ""
+            val results = ArrayList<String>()
+
+            when {
+                evenButton.isChecked -> {
+                    for (i in 0..n step 2) {
+                        results.add(i.toString())
+                    }
+                }
+                oddButton.isChecked -> {
+                    for (i in 1..n step 2) {
+                        results.add(i.toString())
+                    }
+                }
+                squareButton.isChecked -> {
+                    var i = 0
+                    while (i * i <= n) {
+                        results.add((i * i).toString())
+                        i++
+                    }
+                }
+                else -> {
+                    errorText.text = "Please select a number type."
+                    return@setOnClickListener
+                }
+            }
+
+            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+            listView.adapter = adapter
+        }
     }
 }
