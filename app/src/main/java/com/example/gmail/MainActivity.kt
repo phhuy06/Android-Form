@@ -1,6 +1,8 @@
 package com.example.gmail
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -11,74 +13,41 @@ import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var inputNumber: EditText
-    private lateinit var evenButton: RadioButton
-    private lateinit var oddButton: RadioButton
-    private lateinit var squareButton: RadioButton
-    private lateinit var showButton: Button
-    private lateinit var errorText: TextView
+    private lateinit var inputSearch: EditText
     private lateinit var listView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        inputNumber = findViewById(R.id.InputNumber)
-        evenButton = findViewById(R.id.EvenButton)
-        oddButton = findViewById(R.id.OddButton)
-        squareButton = findViewById(R.id.SquareButton)
-        showButton = findViewById(R.id.ShowButton)
-        errorText = findViewById(R.id.ErrorText)
+        inputSearch = findViewById(R.id.Search)
         listView = findViewById(R.id.ListView)
 
-        showButton.setOnClickListener {
-            val input = inputNumber.text.toString()
-            if (input.isEmpty()) {
-                errorText.text = "Please enter a positive number."
-                return@setOnClickListener
+        val initResults: ArrayList<Pair<String, String>> = arrayListOf(Pair("Nguyen Van A", "MSSV: 123456"), Pair("Tran Thi B", "MSSV: 654321"), Pair("Le Van C", "MSSV: 789123"), Pair("Pham Thi D", "MSSV: 321654"), Pair("Hoang Van E", "MSSV: 987654"), Pair("Nguyen Thi F", "MSSV: 456789"), Pair("Tran Van G", "MSSV: 654987"), Pair("Le Thi H", "MSSV: 321987"), Pair("Pham Van I", "MSSV: 987321"))
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, initResults)
+        listView.adapter = adapter
+
+        inputSearch.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
             }
 
-            val n: Int = try {
-                input.toInt().also {
-                    if (it < 0) {
-                        errorText.text = "Please enter a positive number."
-                        return@setOnClickListener
-                    }
-                }
-            } catch (e: NumberFormatException) {
-                errorText.text = "Invalid input. Please enter a valid number."
-                return@setOnClickListener
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
 
-            errorText.text = ""
-            val results = ArrayList<String>()
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s?.length!! <= 2) {
+                    listView.adapter = adapter;
+                    return;
+                }
 
-            when {
-                evenButton.isChecked -> {
-                    for (i in 0..n step 2) {
-                        results.add(i.toString())
-                    }
-                }
-                oddButton.isChecked -> {
-                    for (i in 1..n step 2) {
-                        results.add(i.toString())
-                    }
-                }
-                squareButton.isChecked -> {
-                    var i = 0
-                    while (i * i <= n) {
-                        results.add((i * i).toString())
-                        i++
-                    }
-                }
-                else -> {
-                    errorText.text = "Please select a number type."
-                    return@setOnClickListener
-                }
+                val changedResult = initResults.filter { it.first.contains(s.toString(), ignoreCase = true) || it.second.contains(s.toString(), ignoreCase = true) }
+
+                val newAdapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_list_item_2, android.R.id.text1, changedResult.map { "${it.first}: ${it.second}" })
+                listView.adapter = newAdapter
             }
+        })
 
-            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
-            listView.adapter = adapter
-        }
+
     }
 }
