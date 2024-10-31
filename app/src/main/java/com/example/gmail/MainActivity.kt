@@ -1,53 +1,105 @@
 package com.example.gmail
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CalendarView
+import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.ListView
-import android.widget.RadioButton
-import android.widget.TextView
+import android.widget.RadioGroup
+import android.widget.Spinner
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var inputSearch: EditText
-    private lateinit var listView: ListView
+    private lateinit var mssvInput: EditText
+    private lateinit var fullNameInput: EditText
+    private lateinit var genderRadioGroup: RadioGroup
+    private lateinit var emailInput: EditText
+    private lateinit var phoneInput: EditText
+    private lateinit var birthDateCalendar: CalendarView
+    private lateinit var showDatePickerButton: Button
+    private lateinit var provinceSpinner: Spinner
+    private lateinit var districtSpinner: Spinner
+    private lateinit var wardSpinner: Spinner
+    private lateinit var sportsCheckBox: CheckBox
+    private lateinit var musicCheckBox: CheckBox
+    private lateinit var moviesCheckBox: CheckBox
+    private lateinit var agreeCheckBox: CheckBox
+    private lateinit var submitButton: Button
+
+    private lateinit var addressHelper: AddressHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        inputSearch = findViewById(R.id.Search)
-        listView = findViewById(R.id.ListView)
+        addressHelper = AddressHelper(resources)
 
-        val initResults: ArrayList<Pair<String, String>> = arrayListOf(Pair("Nguyen Van A", "MSSV: 123456"), Pair("Tran Thi B", "MSSV: 654321"), Pair("Le Van C", "MSSV: 789123"), Pair("Pham Thi D", "MSSV: 321654"), Pair("Hoang Van E", "MSSV: 987654"), Pair("Nguyen Thi F", "MSSV: 456789"), Pair("Tran Van G", "MSSV: 654987"), Pair("Le Thi H", "MSSV: 321987"), Pair("Pham Van I", "MSSV: 987321"))
+        mssvInput = findViewById(R.id.MSSVInput)
+        fullNameInput = findViewById(R.id.FullNameInput)
+        genderRadioGroup = findViewById(R.id.GenderRadioGroup)
+        emailInput = findViewById(R.id.EmailInput)
+        phoneInput = findViewById(R.id.PhoneInput)
+        birthDateCalendar = findViewById(R.id.BirthDateCalendar)
+        showDatePickerButton = findViewById(R.id.ShowDatePickerButton)
+        provinceSpinner = findViewById(R.id.ProvinceSpinner)
+        districtSpinner = findViewById(R.id.DistrictSpinner)
+        wardSpinner = findViewById(R.id.WardSpinner)
+        sportsCheckBox = findViewById(R.id.SportsCheckBox)
+        musicCheckBox = findViewById(R.id.MusicCheckBox)
+        moviesCheckBox = findViewById(R.id.MoviesCheckBox)
+        agreeCheckBox = findViewById(R.id.AgreeCheckBox)
+        submitButton = findViewById(R.id.SubmitButton)
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, initResults)
-        listView.adapter = adapter
+        val provinces = addressHelper.getProvinces()
+        val provinceAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, provinces)
+        provinceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        provinceSpinner.adapter = provinceAdapter
 
-        inputSearch.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
+        provinceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedProvince = provinces[position]
+                val districts = addressHelper.getDistricts(selectedProvince)
+                val districtAdapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item, districts)
+                districtAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                districtSpinner.adapter = districtAdapter
             }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        districtSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedProvince = provinceSpinner.selectedItem.toString()
+                val selectedDistrict = districtSpinner.selectedItem.toString()
+                val wards = addressHelper.getWards(selectedProvince, selectedDistrict)
+                val wardAdapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item, wards)
+                wardAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                wardSpinner.adapter = wardAdapter
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s?.length!! <= 2) {
-                    listView.adapter = adapter;
-                    return;
-                }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
 
-                val changedResult = initResults.filter { it.first.contains(s.toString(), ignoreCase = true) || it.second.contains(s.toString(), ignoreCase = true) }
+        showDatePickerButton.setOnClickListener {
+            birthDateCalendar.visibility = if (birthDateCalendar.visibility != View.VISIBLE) View.VISIBLE else View.GONE
+        }
 
-                val newAdapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_list_item_2, android.R.id.text1, changedResult.map { "${it.first}: ${it.second}" })
-                listView.adapter = newAdapter
+        submitButton.setOnClickListener {
+            if (mssvInput.text.isEmpty() || fullNameInput.text.isEmpty() ||
+                emailInput.text.isEmpty() || phoneInput.text.isEmpty() ||
+                genderRadioGroup.checkedRadioButtonId == -1 ||
+                birthDateCalendar.date == 0L ||
+                !agreeCheckBox.isChecked) {
+
+                Toast.makeText(this, "Please fill in all required fields and agree to the terms.", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, "Form submitted successfully!", Toast.LENGTH_LONG).show()
             }
-        })
-
-
+        }
     }
 }
